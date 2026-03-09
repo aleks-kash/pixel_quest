@@ -29,6 +29,7 @@ from src.platform.platform_obj import Platform
 from src.item.item import Item
 from src.npc.npc import NPC
 from src.projectile.projectile import Projectile
+from src.npc.enemy.red_patrol_unit import RedPatrolUnit
 
 class Game:
     def __init__(self):
@@ -79,8 +80,8 @@ class Game:
             self.items.append(Item(1100, 110, 'heart'))
             
             self.npcs = [
-                NPC(400, 368, 32, 32, ENEMY_COLOR, 2, 'enemy', 150, 1),
-                NPC(900, 368, 32, 32, ENEMY_COLOR, -2, 'enemy', 150, 1),
+                RedPatrolUnit(400, 368, 2, 150),
+                RedPatrolUnit(900, 368, -2, 150),
                 NPC(100, 368, 32, 40, (139, 92, 246), 0, 'friendly', 0, 1),
             ]
         elif lvl == 2:
