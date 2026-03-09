@@ -1,0 +1,5 @@
+{
+  "name": "Pixel Quest: The Platformer",
+  "description": "A classic Mario-inspired platformer with physics, NPCs, and levels, built with React and Canvas API.",
+  "requestFramePermissions": []
+}
