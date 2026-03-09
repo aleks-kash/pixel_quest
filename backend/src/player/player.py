@@ -1,10 +1,6 @@
 import pygame
 
-GRAVITY = 0.6
-FRICTION = 0.85
-JUMP_FORCE = -12
-SPEED = 0.8
-MAX_SPEED = 5
+from src.constants import GRAVITY, FRICTION, JUMP_FORCE, SPEED, MAX_SPEED
 
 class Player:
     def __init__(self):
