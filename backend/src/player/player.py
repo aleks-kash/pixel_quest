@@ -11,9 +11,14 @@ class Player:
         self.reset()
 
     def reset(self, x=50, y=300, score=0, health=3):
+        self.x = x
+        self.y = y
         self.rect = pygame.Rect(x, y, 32, 48)
         self.vx = 0
         self.vy = 0
+        self.width = 32
+        self.height = 48    
+        self.color = '#3B82F6'
         self.is_jumping = False
         self.on_ground = False
         self.health = health
@@ -51,17 +56,42 @@ class Player:
                 self.on_ground = False
                 self.rect.y += 5
 
-        # Physics
+        # 2. Physics
         self.vx *= FRICTION
-        self.vy += GRAVITY
-        self.rect.x += self.vx
-        self.rect.y += self.vy
-
         # Clamp speed
         if abs(self.vx) > MAX_SPEED:
             self.vx = MAX_SPEED if self.vx > 0 else -MAX_SPEED
 
-        # Collision
+        # --- X Movement and Collision ---
+        self.x += self.vx
+        self.rect.x = int(self.x)
+
+        for plat in platforms:
+            if plat.type in ['goal', 'lava']:
+                if self.rect.colliderect(plat.rect):
+                    return plat.type # Return early if hit goal or lava
+            
+            if plat.type == 'wood':
+                continue # Ignore X collision for wood
+                
+            if plat.type == 'solid' and self.rect.colliderect(plat.rect):
+                if self.vx > 0: # Moving right
+                    self.rect.right = plat.rect.left
+                    self.x = float(self.rect.x)
+                    self.vx = 0
+                elif self.vx < 0: # Moving left
+                    self.rect.left = plat.rect.right
+                    self.x = float(self.rect.x)
+                    self.vx = 0
+
+        # --- Y Movement and Collision ---
+        self.vy += GRAVITY
+        self.y += self.vy
+        self.rect.y = int(self.y)
+        if abs(self.vx) > MAX_SPEED:
+            self.vx = MAX_SPEED if self.vx > 0 else -MAX_SPEED
+
+        # 3. Collision Detection (Platforms)
         self.on_ground = False
         if self.drop_timer > 0:
             self.drop_timer -= 1
@@ -73,16 +103,19 @@ class Player:
                 continue
 
             if self.rect.colliderect(plat.rect):
-                if plat.type == 'goal':
-                    return "goal"
-                if plat.type == 'lava':
-                    return "lava"
-                
-                if self.vy > 0 and self.rect.bottom - self.vy <= plat.rect.bottom:
-                    if plat.type in ['solid', 'wood']:
-                        if self.rect.bottom - self.vy <= plat.rect.top:
-                            self.rect.bottom = plat.rect.top
-                            self.vy = 0
-                            self.on_ground = True
-                            self.is_jumping = False
+                if plat.type in ['goal', 'lava']:
+                    return plat.type
+                    
+                if plat.type in ['solid', 'wood']:
+                    if self.vy > 0: # Falling down
+                        self.rect.bottom = plat.rect.top
+                        self.y = float(self.rect.y)
+                        self.vy = 0
+                        self.on_ground = True
+                        self.is_jumping = False
+                    elif self.vy < 0 and plat.type == 'solid': # Jumping up and hitting ceiling
+                        self.rect.top = plat.rect.bottom
+                        self.y = float(self.rect.y)
+                        self.vy = 0
+                        
         return None

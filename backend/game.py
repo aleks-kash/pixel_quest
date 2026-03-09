@@ -24,11 +24,11 @@ GINGERBREAD_COLOR = (139, 69, 19)
 WOOD_COLOR = (120, 53, 15)
 HEART_COLOR = (239, 68, 68)
 
-from player import Player
-from platform_obj import Platform
-from item import Item
-from npc import NPC
-from projectile import Projectile
+from src.player.player import Player
+from src.platform.platform_obj import Platform
+from src.item.item import Item
+from src.npc.npc import NPC
+from src.projectile.projectile import Projectile
 
 class Game:
     def __init__(self):
@@ -132,9 +132,11 @@ class Game:
         if self.level == 0:
             if self.player.rect.left < 30:
                 self.player.rect.left = 30
+                self.player.x = float(self.player.rect.x)
                 self.player.vx = 0
             if self.player.rect.right > 770:
                 self.player.rect.right = 770
+                self.player.x = float(self.player.rect.x)
                 self.player.vx = 0
         
         if res == "goal":
