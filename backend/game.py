@@ -3,27 +3,8 @@ import sys
 import math
 import time
 
-# --- Constants ---
-WIDTH, HEIGHT = 800, 450
-FPS = 60
-GRAVITY = 0.6
-FRICTION = 0.85
-JUMP_FORCE = -12
-SPEED = 0.8
-MAX_SPEED = 5
-
-# Colors
-SKY_BLUE = (224, 242, 254)
-PLAYER_COLOR = (59, 130, 246)
-PLATFORM_COLOR = (31, 41, 55)
-GOAL_COLOR = (16, 185, 129)
-LAVA_COLOR = (239, 68, 68)
-COIN_COLOR = (251, 191, 36)
-ENEMY_COLOR = (220, 38, 38)
-GINGERBREAD_COLOR = (139, 69, 19)
-WOOD_COLOR = (120, 53, 15)
-HEART_COLOR = (239, 68, 68)
-
+from src.constants import *
+from src.control.camera import Camera
 from src.player.player import Player
 from src.platform.platform_obj import Platform
 from src.item.item import Item
@@ -38,7 +19,6 @@ class Game:
         pygame.display.set_caption("Pixel Quest Python")
         self.clock = pygame.time.Clock()
         self.player = Player()
-        self.camera_x = 0
         self.level = 0
         self.next_level = 1
         self.state = 'menu'
@@ -199,105 +179,110 @@ class Game:
                     self.player.vy = -4
                     self.player.knockback = 15
                 self.projectiles.remove(p)
-            elif p.rect.x < self.camera_x - 100 or p.rect.x > self.camera_x + WIDTH + 100 or p.distance > p.max_distance:
+            elif p.rect.x < Camera.camera_x - 100 or p.rect.x > Camera.camera_x + WIDTH + 100 or p.distance > p.max_distance:
                 self.projectiles.remove(p)
 
-        # Camera
-        if self.level == 0:
-            self.camera_x = 0
-        else:
-            self.camera_x = self.player.rect.centerx - WIDTH // 2
-            if self.camera_x < 0: self.camera_x = 0
+        # Camera Follow
+        Camera.follow(self.level, self.player)
 
         # Bounds
         if self.player.rect.y > HEIGHT + 100:
             self.state = 'gameOver'
 
     def draw_bg(self, lvl, screen, cam_x):
+        cam_y = Camera.camera_y
+        h = HEIGHT - int(cam_y)
         if lvl == 1:
             screen.fill((224, 242, 254))
             for i in range(3):
-                x = int((i * 500 - cam_x * 0.1) % (WIDTH + 500)) - 250
-                pygame.draw.polygon(screen, (147, 197, 253), [(x, HEIGHT), (x + 250, HEIGHT - 150), (x + 500, HEIGHT)])
+                x = int((i * 500 - cam_x * 0.1) % 1500) - 500
+                pygame.draw.polygon(screen, (147, 197, 253), [(x, h), (x + 250, h - 150), (x + 500, h)])
             for i in range(4):
-                x = int((i * 400 - cam_x * 0.3) % (WIDTH + 400)) - 200
-                pygame.draw.polygon(screen, (96, 165, 250), [(x, HEIGHT), (x + 200, HEIGHT - 80), (x + 400, HEIGHT)])
+                x = int((i * 400 - cam_x * 0.3) % 1600) - 400
+                pygame.draw.polygon(screen, (96, 165, 250), [(x, h), (x + 200, h - 80), (x + 400, h)])
             for i in range(6):
-                x = int((i * 350 - cam_x * 0.7) % (WIDTH + 350)) - 175
-                pygame.draw.ellipse(screen, (52, 211, 153), (x, HEIGHT - 5, 120, 60))
+                x = int((i * 350 - cam_x * 0.7) % 2100) - 350
+                pygame.draw.ellipse(screen, (52, 211, 153), (x, h - 5, 120, 60))
         elif lvl == 2:
             screen.fill((30, 27, 75))
             for i in range(3):
-                x = int((i * 600 - cam_x * 0.1) % (WIDTH + 600)) - 300
-                pygame.draw.polygon(screen, (49, 46, 129), [(x, HEIGHT), (x + 300, HEIGHT - 200), (x + 600, HEIGHT)])
+                x = int((i * 600 - cam_x * 0.1) % 1800) - 600
+                pygame.draw.polygon(screen, (49, 46, 129), [(x, h), (x + 300, h - 200), (x + 600, h)])
             for i in range(8):
-                x = int((i * 200 - cam_x * 0.6) % (WIDTH + 200)) - 100
-                pygame.draw.polygon(screen, (17, 24, 39), [(x, HEIGHT), (x + 50, HEIGHT - 120), (x + 100, HEIGHT)])
+                x = int((i * 200 - cam_x * 0.6) % 1600) - 200
+                pygame.draw.polygon(screen, (17, 24, 39), [(x, h), (x + 50, h - 120), (x + 100, h)])
             for i in range(50):
                 x = (i * 12345) % WIDTH
-                y = (i * 54321) % (HEIGHT - 100)
+                y = (i * 54321) % (HEIGHT - 100) - int(cam_y)
                 sz = (i % 2) + 1
                 pygame.draw.rect(screen, (255, 255, 255), (x, y, sz, sz))
-            pygame.draw.circle(screen, (253, 230, 138), (WIDTH - 80, 60), 30)
+            pygame.draw.circle(screen, (253, 230, 138), (WIDTH - 80, 60 - int(cam_y)), 30)
 
     def draw(self):
+        real_screen = self.screen
+        self.screen = pygame.Surface((Camera.logical_w, Camera.logical_h))
+
         if self.level == 0:
             self.screen.fill((120, 53, 15))
-            # simple window
-            pygame.draw.rect(self.screen, (255, 255, 255), (325, 150, 150, 150), 6)
-            # pseudo draw outside bg inside window:
+            pygame.draw.rect(self.screen, (255, 255, 255), (325 - Camera.camera_x, 150 - Camera.camera_y, 150, 150), 6)
             old_clip = self.screen.get_clip()
-            self.screen.set_clip(pygame.Rect(325, 150, 150, 150))
+            self.screen.set_clip(pygame.Rect(325 - Camera.camera_x, 150 - Camera.camera_y, 150, 150))
             self.draw_bg(self.next_level, self.screen, 0)
             self.screen.set_clip(old_clip)
             
-            # Fireplace portal (Goal)
-            px, py = 640, 260
+            px, py = 640 - Camera.camera_x, 260 - Camera.camera_y
             pygame.draw.circle(self.screen, (249, 115, 22), (px + 20, py + 20), 22)
             pygame.draw.circle(self.screen, (251, 146, 60), (px + 20, py + 20), 10)
             
-            # rug
-            pygame.draw.rect(self.screen, (153, 27, 27), (200, 380, 400, 20))
-            # Door
-            pygame.draw.rect(self.screen, GOAL_COLOR, (60, 320, 80, 80))
+            pygame.draw.rect(self.screen, (153, 27, 27), (200 - Camera.camera_x, 380 - Camera.camera_y, 400, 20))
+            pygame.draw.rect(self.screen, GOAL_COLOR, (60 - Camera.camera_x, 320 - Camera.camera_y, 80, 80))
         else:
-            self.draw_bg(self.level, self.screen, self.camera_x)
+            self.draw_bg(self.level, self.screen, Camera.camera_x)
         
         for p in self.platforms:
             color = LAVA_COLOR if p.type == 'lava' else p.color
             if p.type != 'goal' or self.level != 0:
-                pygame.draw.rect(self.screen, color, (p.rect.x - self.camera_x, p.rect.y, p.rect.width, p.rect.height))
+                pygame.draw.rect(self.screen, color, (p.rect.x - Camera.camera_x, p.rect.y - Camera.camera_y, p.rect.width, p.rect.height))
 
         for i in self.items:
             if not i.collected:
                 if i.type == 'coin':
-                    pygame.draw.circle(self.screen, COIN_COLOR, (i.rect.centerx - self.camera_x, i.rect.centery), i.rect.width // 2)
+                    pygame.draw.circle(self.screen, COIN_COLOR, (i.rect.centerx - Camera.camera_x, i.rect.centery - Camera.camera_y), i.rect.width // 2)
                 else:
-                    pygame.draw.rect(self.screen, HEART_COLOR, (i.rect.x - self.camera_x, i.rect.y, i.rect.width, i.rect.height))
+                    pygame.draw.rect(self.screen, HEART_COLOR, (i.rect.x - Camera.camera_x, i.rect.y - Camera.camera_y, i.rect.width, i.rect.height))
 
         for n in self.npcs:
             if n.health <= 0: continue
-            nx = n.rect.x - self.camera_x
+            nx = n.rect.x - Camera.camera_x
+            ny = n.rect.y - Camera.camera_y
             if n.type == 'gingerbread':
-                pygame.draw.ellipse(self.screen, n.color, (nx, n.rect.y, n.rect.width, n.rect.height))
-                pygame.draw.rect(self.screen, (33,33,33), (nx, n.rect.y - 10, n.rect.width, 4))
-                pygame.draw.rect(self.screen, (239, 68, 68), (nx, n.rect.y - 10, int(n.rect.width * (n.health / n.max_health)), 4))
+                pygame.draw.ellipse(self.screen, n.color, (nx, ny, n.rect.width, n.rect.height))
+                pygame.draw.rect(self.screen, (33,33,33), (nx, ny - 10, n.rect.width, 4))
+                pygame.draw.rect(self.screen, (239, 68, 68), (nx, ny - 10, int(n.rect.width * (n.health / n.max_health)), 4))
             else:
-                pygame.draw.rect(self.screen, n.color, (nx, n.rect.y, n.rect.width, n.rect.height))
-                # eyes
-                pygame.draw.rect(self.screen, (255, 255, 255), (nx + 5, n.rect.y + 5, 6, 6))
+                pygame.draw.rect(self.screen, n.color, (nx, ny, n.rect.width, n.rect.height))
+                pygame.draw.rect(self.screen, (255, 255, 255), (nx + 5, ny + 5, 6, 6))
 
         for p in self.projectiles:
             if p.owner == 'npc':
-                pygame.draw.circle(self.screen, (217, 119, 6), (p.rect.centerx - self.camera_x, p.rect.centery), p.rect.width // 2)
+                pygame.draw.circle(self.screen, (217, 119, 6), (p.rect.centerx - Camera.camera_x, p.rect.centery - Camera.camera_y), p.rect.width // 2)
 
         now = time.time() * 1000
         is_visible = now >= self.player.invulnerable_until or int(now / 150) % 2 == 0
         if is_visible:
-            px = self.player.rect.x - self.camera_x
-            pygame.draw.rect(self.screen, PLAYER_COLOR, (px, self.player.rect.y, self.player.rect.width, self.player.rect.height))
-            # eyes
-            pygame.draw.rect(self.screen, (255, 255, 255), (px + (18 if self.player.direction == 'right' else 5), self.player.rect.y + 10, 8, 8))
+            px = self.player.rect.x - Camera.camera_x
+            py = self.player.rect.y - Camera.camera_y
+            pygame.draw.rect(self.screen, PLAYER_COLOR, (px, py, self.player.rect.width, self.player.rect.height))
+            pygame.draw.rect(self.screen, (255, 255, 255), (px + (18 if self.player.direction == 'right' else 5), py + 10, 8, 8))
+
+        Camera.draw_red_frame(self.screen, self.player, self.level)
+
+        # Scale and blit virtual surface to real screen
+        scaled_surf = pygame.transform.scale(self.screen, (WIDTH, HEIGHT))
+        real_screen.blit(scaled_surf, (0, 0))
+
+        # Restore self.screen to real_screen so UI draws natively
+        self.screen = real_screen
 
         font = pygame.font.SysFont(None, 36)
         self.screen.blit(font.render(f"Hearts: {self.player.health}", True, (0, 0, 0)), (20, 20))
@@ -337,6 +322,8 @@ class Game:
                             self.load_level(1)
                             self.player.reset(50, 300)
                         self.state = 'playing'
+                    
+                    Camera.zoom_update(self.state, event.key)
 
             self.update()
             self.draw()
