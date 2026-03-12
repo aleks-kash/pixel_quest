@@ -35,9 +35,9 @@ class Game:
         level = Level(lvl)
 
         self.platforms = level.get_platforms()
+        self.projectiles = level.get_projectiles()
         self.items = level.get_items()
         self.npcs = level.get_npcs()
-        self.projectiles = level.get_projectiles()
 
     def handle_damage(self):
         now = time.time() * 1000
@@ -151,7 +151,7 @@ class Game:
                 pygame.draw.polygon(screen, (96, 165, 250), [(x, h), (x + 200, h - 80), (x + 400, h)])
             for i in range(6):
                 x = int((i * 350 - cam_x * 0.7) % 2100) - 350
-                pygame.draw.ellipse(screen, (52, 211, 153), (x, h - 5, 120, 60))
+                pygame.draw.ellipse(screen, (52, 211, 153), (x, h - 90, 120, 60))
         elif lvl == 2:
             screen.fill((30, 27, 75))
             for i in range(3):
