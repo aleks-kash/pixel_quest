@@ -104,11 +104,22 @@ class Player:
                     
                 if plat.type in ['solid', 'wood']:
                     if self.vy > 0: # Falling down
-                        self.rect.bottom = plat.rect.top
-                        self.y = float(self.rect.y)
-                        self.vy = 0
-                        self.on_ground = True
-                        self.is_jumping = False
+                        # For wood platforms, only collide if we were above it in the previous frame
+                        if plat.type == 'wood':
+                            if self.rect.bottom - self.vy <= plat.rect.top + 2:
+                                self.rect.bottom = plat.rect.top
+                                self.y = float(self.rect.x) # This seems to be a bug in original code (should be rect.y or self.y), but I will fix the SNAP issue first.
+                                # Actually, checking original code: line 108: self.y = float(self.rect.y)
+                                self.y = float(self.rect.y)
+                                self.vy = 0
+                                self.on_ground = True
+                                self.is_jumping = False
+                        else: # solid
+                            self.rect.bottom = plat.rect.top
+                            self.y = float(self.rect.y)
+                            self.vy = 0
+                            self.on_ground = True
+                            self.is_jumping = False
                     elif self.vy < 0 and plat.type == 'solid': # Jumping up and hitting ceiling
                         self.rect.top = plat.rect.bottom
                         self.y = float(self.rect.y)
