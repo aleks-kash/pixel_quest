@@ -12,6 +12,8 @@ from src.level.level import Level
 from src.npc.npc import NPC
 from src.projectile.projectile import Projectile
 from src.npc.enemy.red_patrol_unit import RedPatrolUnit
+from src.control.write_log import WriteLog
+
 
 class Game:
     def __init__(self):
@@ -52,7 +54,7 @@ class Game:
             self.state = 'gameOver'
 
     def update(self):
-        if self.state != 'playing':
+        if self.state != 'playing' or WriteLog.is_paused:
             return
 
         keys = pygame.key.get_pressed()
@@ -137,6 +139,9 @@ class Game:
         # Bounds
         if self.player.rect.y > HEIGHT + 100:
             self.state = 'gameOver'
+
+        WriteLog.update()
+
 
     def draw_bg(self, lvl, screen, cam_x):
         cam_y = Camera.camera_y
@@ -247,6 +252,8 @@ class Game:
             txt2 = "Press SPACE to start" if self.state == 'menu' else "Press R to retry"
             self.screen.blit(pygame.font.SysFont(None, 72).render(txt1, True, (255, 255, 255)), (WIDTH // 2 - 150, HEIGHT // 2 - 50))
             self.screen.blit(pygame.font.SysFont(None, 36).render(txt2, True, (200, 200, 200)), (WIDTH // 2 - 100, HEIGHT // 2 + 20))
+
+        WriteLog.draw(self.screen)
 
         pygame.display.flip()
 
