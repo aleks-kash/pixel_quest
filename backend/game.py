@@ -13,6 +13,8 @@ from src.npc.npc import NPC
 from src.projectile.projectile import Projectile
 from src.npc.enemy.red_patrol_unit import RedPatrolUnit
 from src.control.write_log import WriteLog
+from src.control.lava_effects import LavaEffects
+
 
 
 class Game:
@@ -26,6 +28,8 @@ class Game:
         self.next_level = 1
         self.state = 'menu'
         self.load_level(0)
+        self.lava_effects = LavaEffects()
+
 
     def load_level(self, lvl):
         self.k_level = lvl
@@ -141,6 +145,8 @@ class Game:
             self.state = 'gameOver'
 
         WriteLog.update()
+        self.lava_effects.update(self.platforms)
+
 
 
     def draw_bg(self, lvl, screen, cam_x):
@@ -231,8 +237,10 @@ class Game:
             self.screen.blit(pygame.font.SysFont(None, 36).render(txt2, True, (200, 200, 200)), (WIDTH // 2 - 100, HEIGHT // 2 + 20))
 
         WriteLog.draw(self.screen)
+        self.lava_effects.draw(self.screen, Camera.camera_x, Camera.camera_y)
 
         pygame.display.flip()
+
 
 
     def run(self):
