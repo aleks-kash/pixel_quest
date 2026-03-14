@@ -22,24 +22,24 @@ class Game:
         pygame.display.set_caption("Pixel Quest Python")
         self.clock = pygame.time.Clock()
         self.player = Player()
-        self.level = 0
+        self.k_level = 0
         self.next_level = 1
         self.state = 'menu'
         self.load_level(0)
 
     def load_level(self, lvl):
-        self.level = lvl
+        self.k_level = lvl
         self.projectiles = []
         self.items = []
         self.platforms = []
         self.npcs = []
 
-        level = Level(lvl)
+        self.level = Level(lvl)
 
-        self.platforms = level.get_platforms()
-        self.projectiles = level.get_projectiles()
-        self.items = level.get_items()
-        self.npcs = level.get_npcs()
+        self.platforms = self.level.get_platforms()
+        self.projectiles = self.level.get_projectiles()
+        self.items = self.level.get_items()
+        self.npcs = self.level.get_npcs()
 
     def handle_damage(self):
         now = time.time() * 1000
@@ -61,7 +61,7 @@ class Game:
         res = self.player.update(keys, self.platforms)
         
         # Hub bounds
-        if self.level == 0:
+        if self.k_level == 0:
             if self.player.rect.left < 30:
                 self.player.rect.left = 30
                 self.player.x = float(self.player.rect.x)
@@ -72,10 +72,10 @@ class Game:
                 self.player.vx = 0
         
         if res == "goal":
-            if self.level == 0:
+            if self.k_level == 0:
                 self.load_level(self.next_level)
                 self.player.reset(50, 300, self.player.score, self.player.health)
-            elif self.level == 1:
+            elif self.k_level == 1:
                 self.next_level = 2
                 self.load_level(0)
                 self.player.reset(80, 350, self.player.score, self.player.health)
@@ -134,7 +134,7 @@ class Game:
                 self.projectiles.remove(p)
 
         # Camera Follow
-        Camera.follow(self.level, self.player)
+        Camera.follow(self.k_level, self.player)
 
         # Bounds
         if self.player.rect.y > HEIGHT + 100:
@@ -144,39 +144,16 @@ class Game:
 
 
     def draw_bg(self, lvl, screen, cam_x):
-        cam_y = Camera.camera_y
-        h = HEIGHT - int(cam_y)
         if lvl == 1:
-            screen.fill((224, 242, 254))
-            for i in range(3):
-                x = int((i * 500 - cam_x * 0.1) % 1500) - 500
-                pygame.draw.polygon(screen, (147, 197, 253), [(x, h), (x + 250, h - 150), (x + 500, h)])
-            for i in range(4):
-                x = int((i * 400 - cam_x * 0.3) % 1600) - 400
-                pygame.draw.polygon(screen, (96, 165, 250), [(x, h), (x + 200, h - 80), (x + 400, h)])
-            for i in range(6):
-                x = int((i * 350 - cam_x * 0.7) % 2100) - 350
-                pygame.draw.ellipse(screen, (52, 211, 153), (x, h - 90, 120, 60))
+            Level(1).draw_background(screen, cam_x)
         elif lvl == 2:
-            screen.fill((30, 27, 75))
-            for i in range(3):
-                x = int((i * 600 - cam_x * 0.1) % 1800) - 600
-                pygame.draw.polygon(screen, (49, 46, 129), [(x, h), (x + 300, h - 200), (x + 600, h)])
-            for i in range(8):
-                x = int((i * 200 - cam_x * 0.6) % 1600) - 200
-                pygame.draw.polygon(screen, (17, 24, 39), [(x, h), (x + 50, h - 120), (x + 100, h)])
-            for i in range(50):
-                x = (i * 12345) % WIDTH
-                y = (i * 54321) % (HEIGHT - 100) - int(cam_y)
-                sz = (i % 2) + 1
-                pygame.draw.rect(screen, (255, 255, 255), (x, y, sz, sz))
-            pygame.draw.circle(screen, (253, 230, 138), (WIDTH - 80, 60 - int(cam_y)), 30)
+            Level(2).draw_background(screen, cam_x)
 
     def draw(self):
         real_screen = self.screen
         self.screen = pygame.Surface((Camera.logical_w, Camera.logical_h))
 
-        if self.level == 0:
+        if self.k_level == 0:
             self.screen.fill((120, 53, 15))
             pygame.draw.rect(self.screen, (255, 255, 255), (325 - Camera.camera_x, 150 - Camera.camera_y, 150, 150), 6)
             old_clip = self.screen.get_clip()
@@ -191,11 +168,11 @@ class Game:
             pygame.draw.rect(self.screen, (153, 27, 27), (200 - Camera.camera_x, 380 - Camera.camera_y, 400, 20))
             pygame.draw.rect(self.screen, GOAL_COLOR, (60 - Camera.camera_x, 320 - Camera.camera_y, 80, 80))
         else:
-            self.draw_bg(self.level, self.screen, Camera.camera_x)
+            self.draw_bg(self.k_level, self.screen, Camera.camera_x)
         
         for p in self.platforms:
             color = LAVA_COLOR if p.type == 'lava' else p.color
-            if p.type != 'goal' or self.level != 0:
+            if p.type != 'goal' or self.k_level != 0:
                 pygame.draw.rect(self.screen, color, (p.rect.x - Camera.camera_x, p.rect.y - Camera.camera_y, p.rect.width, p.rect.height))
 
         for i in self.items:
@@ -229,7 +206,7 @@ class Game:
             pygame.draw.rect(self.screen, PLAYER_COLOR, (px, py, self.player.rect.width, self.player.rect.height))
             pygame.draw.rect(self.screen, (255, 255, 255), (px + (18 if self.player.direction == 'right' else 5), py + 10, 8, 8))
 
-        Camera.draw_red_frame(self.screen, self.player, self.level)
+        Camera.draw_red_frame(self.screen, self.player, self.k_level)
 
         # Scale and blit virtual surface to real screen
         scaled_surf = pygame.transform.scale(self.screen, (WIDTH, HEIGHT))
@@ -241,7 +218,7 @@ class Game:
         font = pygame.font.SysFont(None, 36)
         self.screen.blit(font.render(f"Hearts: {self.player.health}", True, (0, 0, 0)), (20, 20))
         self.screen.blit(font.render(f"Score: {self.player.score}", True, (0, 0, 0)), (150, 20))
-        lvl_str = "Home" if self.level == 0 else str(self.level)
+        lvl_str = "Home" if self.k_level == 0 else str(self.k_level)
         self.screen.blit(font.render(f"Level: {lvl_str}", True, (0, 0, 0)), (300, 20))
 
         if self.state in ['menu', 'gameOver', 'win']:
@@ -257,6 +234,7 @@ class Game:
 
         pygame.display.flip()
 
+
     def run(self):
         while True:
             for event in pygame.event.get():
@@ -270,10 +248,10 @@ class Game:
                         self.player.reset(50, 300)
                     if self.state in ['gameOver', 'win'] and event.key == pygame.K_r:
                         if self.state == 'gameOver':
-                            self.load_level(self.level)
+                            self.load_level(self.k_level)
                             self.player.reset(50, 300, self.player.score, 3)
                         else:
-                            self.level = 1
+                            self.k_level = 1
                             self.next_level = 2
                             self.load_level(1)
                             self.player.reset(50, 300)

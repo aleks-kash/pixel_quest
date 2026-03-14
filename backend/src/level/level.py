@@ -2,17 +2,27 @@ from src.platform.platform_obj import Platform
 from src.level.level_0_hub import Level0Hub
 from src.level.level_1_tutorial import Level1Tutorial
 from src.level.level_2_night import Level2Night
+from src.control.write_log import WriteLog
 
 class Level:
+
+    k_max_level = 0
+
     def __init__(self, k_lvl):
+        self.level = Level.load_level(k_lvl)
+
+    @classmethod
+    def load_level(cls, k_lvl):
+        if k_lvl > cls.k_max_level:
+            cls.k_max_level = k_lvl
         if k_lvl == 0:
-            self.level = Level0Hub()
+            return Level0Hub()
         elif k_lvl == 1:
-            self.level = Level1Tutorial()
+            return Level1Tutorial()
         elif k_lvl == 2:
-            self.level = Level2Night()
+            return Level2Night()
         else:
-            self.level = Level0Hub()
+            return Level0Hub()
 
     def get_platforms(self):
         return self.level.platforms
@@ -22,3 +32,5 @@ class Level:
         return self.level.npcs
     def get_projectiles(self):
         return self.level.projectiles
+    def draw_background(self, screen, cam_x):
+        self.level.draw_background(screen, cam_x)
