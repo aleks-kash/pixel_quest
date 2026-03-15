@@ -29,6 +29,10 @@ class Game:
         self.state = 'menu'
         self.load_level(0)
         self.lava_effects = LavaEffects()
+        self.virtual_screen = pygame.Surface((WIDTH, HEIGHT))
+        self.ui_font = pygame.font.SysFont(None, 36)
+        self.title_font = pygame.font.SysFont(None, 72)
+
 
 
     def load_level(self, lvl):
@@ -157,7 +161,12 @@ class Game:
 
     def draw(self):
         real_screen = self.screen
-        self.screen = pygame.Surface((Camera.logical_w, Camera.logical_h))
+        # 1. Prepare virtual screen (for zoom/parallax)
+        if self.virtual_screen.get_size() != (Camera.logical_w, Camera.logical_h):
+            self.virtual_screen = pygame.Surface((Camera.logical_w, Camera.logical_h))
+        
+        self.screen = self.virtual_screen
+
 
         if self.k_level == 0:
             self.screen.fill((120, 53, 15))
@@ -215,17 +224,14 @@ class Game:
         Camera.draw_red_frame(self.screen, self.player, self.k_level)
 
         # Scale and blit virtual surface to real screen
-        scaled_surf = pygame.transform.scale(self.screen, (WIDTH, HEIGHT))
-        real_screen.blit(scaled_surf, (0, 0))
-
-        # Restore self.screen to real_screen so UI draws natively
+        pygame.transform.scale(self.screen, (WIDTH, HEIGHT), real_screen)
         self.screen = real_screen
 
-        font = pygame.font.SysFont(None, 36)
-        self.screen.blit(font.render(f"Hearts: {self.player.health}", True, (0, 0, 0)), (20, 20))
-        self.screen.blit(font.render(f"Score: {self.player.score}", True, (0, 0, 0)), (150, 20))
+        # 3. Draw UI (Directly on self.screen)
+        self.screen.blit(self.ui_font.render(f"Hearts: {self.player.health}", True, (0, 0, 0)), (20, 20))
+        self.screen.blit(self.ui_font.render(f"Score: {self.player.score}", True, (0, 0, 0)), (150, 20))
         lvl_str = "Home" if self.k_level == 0 else str(self.k_level)
-        self.screen.blit(font.render(f"Level: {lvl_str}", True, (0, 0, 0)), (300, 20))
+        self.screen.blit(self.ui_font.render(f"Level: {lvl_str}", True, (0, 0, 0)), (300, 20))
 
         if self.state in ['menu', 'gameOver', 'win']:
             overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
@@ -233,13 +239,14 @@ class Game:
             self.screen.blit(overlay, (0, 0))
             txt1 = "PIXEL QUEST" if self.state == 'menu' else ("GAME OVER" if self.state == 'gameOver' else "YOU WIN!")
             txt2 = "Press SPACE to start" if self.state == 'menu' else "Press R to retry"
-            self.screen.blit(pygame.font.SysFont(None, 72).render(txt1, True, (255, 255, 255)), (WIDTH // 2 - 150, HEIGHT // 2 - 50))
-            self.screen.blit(pygame.font.SysFont(None, 36).render(txt2, True, (200, 200, 200)), (WIDTH // 2 - 100, HEIGHT // 2 + 20))
+            self.screen.blit(self.title_font.render(txt1, True, (255, 255, 255)), (WIDTH // 2 - 150, HEIGHT // 2 - 50))
+            self.screen.blit(self.ui_font.render(txt2, True, (200, 200, 200)), (WIDTH // 2 - 100, HEIGHT // 2 + 20))
 
         WriteLog.draw(self.screen)
         self.lava_effects.draw(self.screen, Camera.camera_x, Camera.camera_y)
 
         pygame.display.flip()
+
 
 
 

@@ -55,6 +55,13 @@ class Level2Night:
         screen.fill((30, 27, 75)) #1E1B4B
 
         # 2. Звезды (с анимацией мерцания)
+        if not hasattr(self, 'star_surfs'):
+            self.star_surfs = {}
+            for size in [1, 2]:
+                s = pygame.Surface((size, size))
+                s.fill((255, 255, 255))
+                self.star_surfs[size] = s
+
         time = pygame.time.get_ticks()
         for i in range(50):
             x = (i * 12345) % WIDTH
@@ -62,13 +69,11 @@ class Level2Night:
             size = (i % 2) + 1
             
             # Мерцание
-            alpha = 0.5 + math.sin(time / 1000 + i) * 0.5
+            alpha = int((0.5 + math.sin(time / 1000 + i) * 0.5) * 255)
             
-            # Создаем поверхность для прозрачности
-            star_surf = pygame.Surface((size, size))
-            star_surf.set_alpha(int(alpha * 255))
-            star_surf.fill((255, 255, 255))
-            screen.blit(star_surf, (x, y)) 
+            star_s = self.star_surfs[size]
+            star_s.set_alpha(alpha)
+            screen.blit(star_s, (x, y)) 
 
         # 3. Луна
         pygame.draw.circle(screen, (253, 230, 138), (WIDTH - 80, 60), 30)

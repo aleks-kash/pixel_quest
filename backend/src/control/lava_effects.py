@@ -54,12 +54,24 @@ class LavaEffects:
                     })
 
     def draw(self, screen, cam_x, cam_y):
+        # Cache surfaces for particles if not already done
+        if not hasattr(self, 'particle_cache'):
+            self.particle_cache = {}
+
         # Draw steam
         for p in self.particles:
+            size_int = int(p['size'])
             alpha = int((p['life'] / 1500) * 150)
-            s = pygame.Surface((p['size']*2, p['size']*2), pygame.SRCALPHA)
-            pygame.draw.circle(s, (200, 200, 200, alpha), (p['size'], p['size']), p['size'])
-            screen.blit(s, (p['x'] - cam_x - p['size'], p['y'] - cam_y - p['size']))
+            
+            # Create/get cached surface for this size
+            if size_int not in self.particle_cache:
+                s = pygame.Surface((size_int * 2, size_int * 2), pygame.SRCALPHA)
+                pygame.draw.circle(s, (200, 200, 200), (size_int, size_int), size_int)
+                self.particle_cache[size_int] = s
+            
+            p_surf = self.particle_cache[size_int]
+            p_surf.set_alpha(alpha)
+            screen.blit(p_surf, (p['x'] - cam_x - p['size'], p['y'] - cam_y - p['size']))
 
         # Draw bubbles
         for b in self.bubbles:
