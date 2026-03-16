@@ -31,8 +31,11 @@ class Level1Tutorial:
         self.items.append(Item(1100, 110, 'heart'))
         
         self.npcs = [
+            # Красный квадратик
             RedPatrolUnit(400, 368, 2, 150),
             RedPatrolUnit(900, 368, -2, 150),
+
+            # Дружелюбный человечек
             NPC(100, 368, 32, 40, (139, 92, 246), 0, 'friendly', 0, 1),
         ]
 

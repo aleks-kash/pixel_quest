@@ -4,9 +4,11 @@ import pygame
 from src.constants import *
 from src.npc.npc import NPC
 from src.npc.enemy.red_patrol_unit import RedPatrolUnit
+from src.npc.enemy.gingerbread import Gingerbread
 from src.item.item import Item
 from src.platform.platform_obj import Platform
 from src.control.camera import Camera
+
 
 class Level2Night:
     def __init__(self):
@@ -35,9 +37,12 @@ class Level2Night:
         self.items.append(Item(1300, 110, 'heart'))
         
         self.npcs = [
-            NPC(300, 368, 32, 32, GINGERBREAD_COLOR, 1, 'gingerbread', 100, 2),
-            NPC(700, 368, 32, 32, GINGERBREAD_COLOR, -1, 'gingerbread', 100, 2),
-            NPC(1200, 368, 32, 32, GINGERBREAD_COLOR, 1, 'gingerbread', 100, 2),
+            # Прянечный человечек
+            Gingerbread(300, 368, 1, 60),
+            Gingerbread(700, 368, -1, 60),
+            Gingerbread(1200, 368, 1, 60),
+
+            # Красный квадратик
             RedPatrolUnit(950, 218, 2, 60),
         ]
 
